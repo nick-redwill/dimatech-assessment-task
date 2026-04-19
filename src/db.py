@@ -26,11 +26,6 @@ AsyncSessionLocal = async_sessionmaker(
 )
 
 
-async def get_session() -> AsyncGenerator[AsyncSession]:
-    async with AsyncSessionLocal() as session:
-        yield session
-
-
 async def create_tables(engine):
     from models.account import AccountOrm
     from models.transaction import TransactionOrm

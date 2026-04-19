@@ -5,6 +5,8 @@ from argon2.exceptions import VerifyMismatchError
 from datetime import datetime, timezone, timedelta
 from settings import SECRET_KEY
 
+from exceptions import AuthError
+
 ph = PasswordHasher()
 
 
@@ -25,4 +27,13 @@ def create_jwt_token(data: dict, expires_delta: timedelta | None = None):
         expires_delta or timedelta(minutes=60)
     )
     to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY)
+    return jwt.encode(to_encode, SECRET_KEY, algorithm="HS256")
+
+
+def decode_jwt(token: str) -> dict:
+    try:
+        return jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+    except jwt.ExpiredSignatureError:
+        raise AuthError("Token expired")
+    except jwt.JWTError:
+        raise AuthError("Invalid token")

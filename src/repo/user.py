@@ -9,6 +9,8 @@ from schemas.relations import UserRel
 from models.user import UserOrm
 from utils.auth import hash_password
 
+from exceptions import NotFoundError
+
 UserSchema = TypeVar("UserSchema", UserRel, UserInternal)
 
 
@@ -39,7 +41,7 @@ async def update_user(
     updated_id = result.scalar_one_or_none()
 
     if not updated_id:
-        raise ValueError(f"User with id {user_id} not found")
+        raise NotFoundError(f"User with id {user_id} not found")
 
     await session.flush()
     return await get_user(session, updated_id)
@@ -59,13 +61,13 @@ async def get_user(
     query = (
         select(UserOrm)
         .where(UserOrm.id == user_id)
-        .options(selectinload(UserOrm.account))
+        .options(selectinload(UserOrm.accounts))
     )
     result = await session.execute(query)
     user = result.scalar_one_or_none()
 
     if not user:
-        raise ValueError(f"User with id {user_id} not found")
+        raise NotFoundError(f"User with id {user_id} not found")
 
     return schema.model_validate(user, from_attributes=True)
 
@@ -78,13 +80,13 @@ async def get_user_by_email(
     query = (
         select(UserOrm)
         .where(UserOrm.email == email)
-        .options(selectinload(UserOrm.account))
+        .options(selectinload(UserOrm.accounts))
     )
     result = await session.execute(query)
     user = result.scalar_one_or_none()
 
     if not user:
-        raise ValueError(f"User with email {email} not found")
+        raise NotFoundError(f"User with email {email} not found")
 
     return schema.model_validate(user, from_attributes=True)
 
@@ -94,7 +96,7 @@ async def get_all_users(
 ) -> list[UserRel]:
     query = (
         select(UserOrm)
-        .options(selectinload(UserOrm.account))
+        .options(selectinload(UserOrm.accounts))
         .offset(offset)
         .limit(limit)
     )

@@ -1,4 +1,4 @@
-# DimaTech Assignment Task
+# DimaTech Assessment Task
 
 Асинхронное REST API приложение на Sanic с PostgreSQL.
 
@@ -20,8 +20,8 @@
 ### 1. Клонируем репозиторий
 
 ```bash
-git clone https://github.com/nick-redwill/dimatech-assignment-task
-cd dimatech-assignment-task
+git clone https://github.com/nick-redwill/dimatech-assessment-task
+cd dimatech-assessment-task
 ```
 
 ### 2. Создаем `.env` файл из шаблона (значения по умолчанию для докера уже прописаны)

@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 
 class AccountCreate(BaseModel):
+    id: UUID | None = None
     user_id: int
     balance: Decimal = Decimal("0.00")
 

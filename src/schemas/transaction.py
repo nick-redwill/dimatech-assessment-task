@@ -5,6 +5,7 @@ from datetime import datetime
 
 
 class TransactionCreate(BaseModel):
+    id: UUID | None = None
     account_id: UUID
     amount: Decimal
 

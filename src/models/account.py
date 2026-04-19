@@ -28,7 +28,7 @@ class AccountOrm(Base):
         nullable=False,
     )
 
-    user: Mapped["UserOrm"] = relationship(back_populates="account")
+    user: Mapped["UserOrm"] = relationship(back_populates="accounts")
     transactions: Mapped[list["TransactionOrm"]] = relationship(
         back_populates="account",
         cascade="all, delete-orphan",

@@ -31,7 +31,7 @@ class UserOrm(Base):
         nullable=False,
     )
 
-    account: Mapped["AccountOrm"] = relationship(
+    accounts: Mapped[list["AccountOrm"]] = relationship(
         back_populates="user",
         uselist=True,
         cascade="all, delete-orphan",

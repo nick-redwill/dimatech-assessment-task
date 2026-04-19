@@ -11,6 +11,7 @@ from repo.user import (
 )
 from enums import UserRole
 from utils.auth import verify_password
+from exceptions import NotFoundError
 
 
 @pytest.mark.asyncio
@@ -49,13 +50,13 @@ async def test_get_user_by_email(session):
 
 @pytest.mark.asyncio
 async def test_get_non_existent_user(session):
-    with pytest.raises(ValueError, match="not found"):
+    with pytest.raises(NotFoundError, match="not found"):
         await get_user(session, 999)
 
 
 @pytest.mark.asyncio
 async def test_get_non_existent_user_by_email(session):
-    with pytest.raises(ValueError, match="not found"):
+    with pytest.raises(NotFoundError, match="not found"):
         await get_user_by_email(session, "test@test.com")
 
 
@@ -100,7 +101,7 @@ async def test_update_password(session):
 
 @pytest.mark.asyncio
 async def test_update_non_existent(session):
-    with pytest.raises(ValueError, match="not found"):
+    with pytest.raises(NotFoundError, match="not found"):
         await update_user(session, 999, UserUpdate(email="test@test.com"))
 
 
@@ -116,7 +117,7 @@ async def test_delete_user(session):
     is_deleted = await delete_user(session, user.id)
     assert is_deleted is True
 
-    with pytest.raises(ValueError, match="not found"):
+    with pytest.raises(NotFoundError, match="not found"):
         await get_user(session, user.id)
 
 

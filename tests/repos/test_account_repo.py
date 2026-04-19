@@ -4,6 +4,7 @@ from decimal import Decimal
 import pytest
 import pytest_asyncio
 
+from exceptions import NotFoundError
 from schemas.account import AccountCreate, AccountUpdate
 from schemas.user import UserCreate
 from repo.user import create_user
@@ -13,6 +14,7 @@ from repo.account import (
     update_account,
     delete_account,
     get_all_accounts,
+    get_accounts_by_user,
 )
 
 
@@ -41,6 +43,25 @@ async def test_create_account(session, setup_user):
 
 
 @pytest.mark.asyncio
+async def test_get_accounts_by_user(session, setup_user):
+    for i in range(3):
+        await create_account(
+            session,
+            AccountCreate(
+                user_id=setup_user.id, balance=Decimal(str(i * 100))
+            ),
+        )
+
+    accounts = await get_accounts_by_user(session, setup_user.id)
+
+    assert len(accounts) == 3
+    for account in accounts:
+        assert account.user_id == setup_user.id
+        assert account.user is not None
+        assert account.user.email == "test@mail.com"
+
+
+@pytest.mark.asyncio
 async def test_update_account(session, setup_user):
     account = await create_account(
         session, AccountCreate(user_id=setup_user.id, balance=Decimal("10.00"))
@@ -58,7 +79,7 @@ async def test_update_account(session, setup_user):
 @pytest.mark.asyncio
 async def test_update_non_existent_account(session):
     random_uuid = uuid4()
-    with pytest.raises(ValueError, match="not found"):
+    with pytest.raises(NotFoundError, match="not found"):
         await update_account(session, random_uuid, AccountUpdate(balance=100))
 
 
@@ -71,14 +92,14 @@ async def test_delete_account(session, setup_user):
     deleted = await delete_account(session, account.id)
     assert deleted is True
 
-    with pytest.raises(ValueError, match="not found"):
+    with pytest.raises(NotFoundError, match="not found"):
         await get_account(session, account.id)
 
 
 @pytest.mark.asyncio
 async def test_get_account_not_found(session):
     random_uuid = uuid4()
-    with pytest.raises(ValueError, match="not found"):
+    with pytest.raises(NotFoundError, match="not found"):
         await get_account(session, random_uuid)
 
 

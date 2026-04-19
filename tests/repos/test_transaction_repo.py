@@ -4,6 +4,7 @@ from decimal import Decimal
 import pytest
 import pytest_asyncio
 
+from exceptions import DuplicateError, NotFoundError
 from schemas.transaction import TransactionCreate
 from schemas.account import AccountCreate
 from schemas.user import UserCreate
@@ -12,6 +13,7 @@ from repo.account import create_account
 from repo.transaction import (
     create_transaction,
     get_transaction,
+    get_transactions_by_account,
     get_all_transactions,
     delete_transaction,
 )
@@ -62,6 +64,57 @@ async def test_get_transaction(session, setup_account):
 
 
 @pytest.mark.asyncio
+async def test_create_duplicate_transaction(session, setup_account):
+    tx = await create_transaction(
+        session,
+        TransactionCreate(
+            account_id=setup_account.id, amount=Decimal("50.00")
+        ),
+    )
+
+    with pytest.raises(DuplicateError):
+        await create_transaction(
+            session,
+            TransactionCreate(
+                id=tx.id,
+                account_id=setup_account.id,
+                amount=Decimal("50.00"),
+            ),
+        )
+
+
+@pytest.mark.asyncio
+async def test_get_transactions_by_account(session, setup_account):
+    for i in range(3):
+        await create_transaction(
+            session,
+            TransactionCreate(
+                account_id=setup_account.id, amount=Decimal(str(i * 10))
+            ),
+        )
+
+    account2 = await create_account(
+        session,
+        AccountCreate(user_id=setup_account.user_id, balance=Decimal("0.00")),
+    )
+
+    for i in range(3):
+        await create_transaction(
+            session,
+            TransactionCreate(
+                account_id=account2.id, amount=Decimal(str(i * 10))
+            ),
+        )
+
+    transactions = await get_transactions_by_account(session, setup_account.id)
+
+    assert len(transactions) == 3
+    for tx in transactions:
+        assert tx.account_id == setup_account.id
+        assert tx.account is not None
+
+
+@pytest.mark.asyncio
 async def test_get_all_transactions(session, setup_account):
     for i in range(10):
         await create_transaction(
@@ -101,5 +154,5 @@ async def test_delete_transaction(session, setup_account):
     result = await delete_transaction(session, tx.id)
     assert result is True
 
-    with pytest.raises(ValueError, match="not found"):
+    with pytest.raises(NotFoundError, match="not found"):
         await get_transaction(session, tx.id)
